@@ -3,6 +3,8 @@ import io from 'socket.io-client';
 import axios from 'axios';
 import { url } from '../../url'; // Replace with your actual URL
 import { useLocation } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const socket = io(url); // Connect to the Socket.io server
 
@@ -12,6 +14,8 @@ const Chat = () => {
   const [message, setMessage] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
   const [newMessages, setNewMessages] = useState([]);
+
+  const notificationSound = new Audio('/hero.wav'); // Path to your notification sound
 
   console.log("Learner ID: " + learnerId + " | Tutor ID: " + tutorId);
 
@@ -32,6 +36,8 @@ const Chat = () => {
       if ((data.senderId === learnerId && data.receiverId === tutorId) || 
           (data.senderId === tutorId && data.receiverId === learnerId)) {
         setNewMessages((prev) => [...prev, data]);
+        // toast.info('New message received!');
+        notificationSound.play(); // Play sound on receiving a message
       }
     });
 
@@ -45,11 +51,15 @@ const Chat = () => {
       // Emit message to Socket.io server
       socket.emit('sendMessage', { senderId: learnerId, receiverId: tutorId, message });
       setMessage(''); // Clear the input field
+      toast.success('Message sent!');
+      notificationSound.play(); // Play sound on sending a message
     }
   };
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
+      <ToastContainer /> {/* Add ToastContainer to show notifications */}
+      
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {/* Chat History */}
         {chatHistory.map((msg, index) => (

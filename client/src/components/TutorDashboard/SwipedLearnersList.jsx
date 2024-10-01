@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { url } from '../../url';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'; // Import CSS for Toastify
 
-const SwipedLearnersList = ({ tutorId }) => {
+const SwipedLearnersList = ({tutorId}) => {
   const location = useLocation();
   const navigate = useNavigate(); // Use navigate to redirect
   const [learners, setLearners] = useState([]);
@@ -24,10 +26,10 @@ const SwipedLearnersList = ({ tutorId }) => {
         } else {
           setLearners([]);
         }
-
       } catch (error) {
         console.error('Error fetching swiped learners:', error);
         setError('Failed to fetch swiped learners.');
+        toast.error('Failed to fetch swiped learners.'); // Show error toast
       } finally {
         setLoading(false);
       }
@@ -38,6 +40,7 @@ const SwipedLearnersList = ({ tutorId }) => {
     } else {
       setLoading(false);
       setError('Tutor ID not found. Please log in again.');
+      toast.error('Tutor ID not found. Please log in again.'); // Error toast
     }
   }, [tutorId, userId]);
 
@@ -47,6 +50,9 @@ const SwipedLearnersList = ({ tutorId }) => {
       await axios.post(`${url}/api/users/connect_learner`, { userId, learnerId });
       console.log(`Tutor ${userId} connected with learner ${learnerId}`);
       
+      // Show success toast
+      toast.success('Successfully connected with the learner!');
+
       // Optionally, refresh the list or update the state
       const updatedLearners = learners.map(learner =>
         learner._id === learnerId ? { ...learner, hasConnected: true } : learner
@@ -54,17 +60,19 @@ const SwipedLearnersList = ({ tutorId }) => {
       setLearners(updatedLearners);
     } catch (error) {
       console.error('Error connecting with learner:', error);
+      toast.error('Failed to connect with the learner.'); // Error toast
     }
   };
 
   // Function to handle 'Chat' button click
   const handleChat = (learnerId) => {
-    let tutorId=userId
-    let temp=learnerId
-    learnerId=tutorId;
-    tutorId=temp
-    console.log("sender ki id" +learnerId);
-    navigate('/chat', { state: { tutorId,learnerId} }); // Navigate to chat with IDs
+    let tutorId = userId;
+    let temp = learnerId;
+    learnerId = tutorId;
+    tutorId = temp;
+    console.log("Sender ID: " + learnerId);
+    navigate('/chat', { state: { tutorId, learnerId } }); // Navigate to chat with IDs
+    toast.info('Redirecting to chat...'); // Info toast
   };
 
   // Render logic based on loading, error, and learners state
@@ -82,6 +90,7 @@ const SwipedLearnersList = ({ tutorId }) => {
 
   return (
     <div>
+      <ToastContainer /> {/* Toast container for notifications */}
       <h2 className="text-2xl font-bold mb-4">Learners Who Swiped Right on You</h2>
       <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {learners.map((learner) => (

@@ -3,6 +3,8 @@ import axios from 'axios';
 import { getDistance } from 'geolib';
 import { useLocation, useNavigate } from 'react-router-dom'; // Import useNavigate for redirection
 import { url } from '../../url';
+import { toast, ToastContainer } from 'react-toastify'; // Import Toastify
+import 'react-toastify/dist/ReactToastify.css'; // Import Toastify CSS
 
 const TutorsList = () => {
   const location = useLocation();
@@ -41,12 +43,12 @@ const TutorsList = () => {
       });
 
       console.log(res);
-      alert('Connected successfully!');
+      toast.success('Connected successfully!'); // Use Toastify for success notification
 
       setConnectedTutors((prev) => [...prev, tutorID]);
     } catch (error) {
       console.error('Error connecting with tutor:', error.message);
-      alert('Error connecting. Please try again.');
+      toast.error('Error connecting. Please try again.'); // Use Toastify for error notification
     }
   };
 
@@ -79,6 +81,7 @@ const TutorsList = () => {
         setFilteredTutors(matchingTutors.filter(tutor => tutor !== null));
       } catch (error) {
         console.error('Error fetching users:', error);
+        toast.error('Error fetching tutors'); // Error fetching tutors
       }
     };
 
@@ -103,6 +106,7 @@ const TutorsList = () => {
 
   return (
     <div className="container mx-auto p-4">
+      <ToastContainer /> {/* Toastify container */}
       <h2 className="text-2xl font-bold mb-4">Available Tutors</h2>
       {filteredTutors.length > 0 ? (
         <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
