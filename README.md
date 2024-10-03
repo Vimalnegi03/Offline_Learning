@@ -45,3 +45,4 @@ An **Offline Learning System** that enables seamless interaction between learner
 git clone https://github.com/your-username/offline-learning-system.git
 cd offline-learning-system
 ```
+Made with❤️ by Vimal Negi
