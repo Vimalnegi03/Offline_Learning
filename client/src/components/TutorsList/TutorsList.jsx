@@ -115,7 +115,7 @@ const TutorsList = () => {
               <h3 className="text-lg font-semibold mb-2">{tutor.name}</h3>
               <img src={tutor.photo || 'default-image.jpg'} alt={tutor.name} className="w-full h-48 object-cover rounded-md mb-2" />
               <p className="text-gray-700">Skills: {tutor.skills?.join(', ') || 'No skills listed'}</p>
-              <p className="text-gray-600">Location: {tutor.placeName || 'Unknown location'}</p>
+            
               <button
                 onClick={() => {
                   const label = getButtonLabel(tutor);
