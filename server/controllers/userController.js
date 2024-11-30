@@ -42,7 +42,7 @@ export const registerUser = async (req, res) => {
     console.log("Received request:", req.body); // Log the request body
     console.log("File received:", req.file); // Log the file received
   
-    const { name, email, password, gender,role,location } = req.body;
+    const { name, email, password, gender,role,location,description} = req.body;
     const skills = req.body.skills;
     try {
         const coordinates = await getCoordinates(location);
@@ -80,6 +80,7 @@ export const registerUser = async (req, res) => {
             type: 'Point',
             coordinates: [coordinates.longitude, coordinates.latitude],
           }, 
+          description
       });
   
       // Generate a JWT token
@@ -94,7 +95,8 @@ export const registerUser = async (req, res) => {
           role: user.role,
           photo: user.photo,
           location: user.location.coordinates,
-          swipes:user.swipes
+          swipes:user.swipes,
+          description:user.description
         },
         token
       });
@@ -130,7 +132,10 @@ export const loginUser = async (req, res) => {
     skills:user.skills,
 photo:user.photo,
 id:user._id,
-swipes:user.swipes
+swipes:user.swipes,
+description:user.description,
+name:user.name,
+email:user.email
 });
     } catch (error) {
       res.status(500).json({ message: 'Server error', error: error.message });
@@ -227,3 +232,54 @@ export const learnerConnect= async (req, res) => {
     }
   };
   
+  export const getUser = async (req, res) => {
+    const { id } = req.params; // Extract the `id` from the request parameters
+    try {
+      // Use await to handle the asynchronous operation
+      const person = await User.findById(id); 
+      if (!person) {
+        return res.status(404).json({ message: 'User not found' }); // Handle the case where the user is not found
+      }
+      res.json(person); // Send the user data as the response
+    } catch (error) {
+      // Handle errors and send an appropriate response
+      res.status(500).json({
+        message: 'Internal server error',
+        error: error.message, // Optionally include the error message for debugging
+      });
+    }
+  };
+  
+  //updating user
+  export const updateProfile = async (req, res) => {
+    const { userId } = req.params; // Get the user ID from the route parameters
+    const { name, email, location, description, skills } = req.body; // Destructure data from request body
+  
+    try {
+      // Find the user by ID
+      const user = await User.findById(userId);
+  
+      // Check if user exists
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      // Update the fields if they are provided
+      if (name) user.name = name;
+      if (email) user.email = email;
+      if (location) user.location = location;
+      if (skills) user.skills = skills;
+  
+      // Save the updated user
+      const updatedUser = await user.save();
+  
+      // Send success response
+      res.status(200).json({
+        message: 'Profile updated successfully',
+        user: updatedUser,
+      });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      res.status(500).json({ message: 'Failed to update profile', error });
+    }
+  };

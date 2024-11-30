@@ -20,16 +20,18 @@ const Login = () => {
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
       const response = await axios.post(`${url}/api/users/login`, values);
-      const { role, skills, location, name, photo, id, swipes } = response.data;
+      const { role, skills, location, name, photo, id, swipes,email} = response.data;
+       console.log(email);
+       
 
       // Show success notification
       toast.success(`Welcome ${name}`, { position: "top-center" });
 
       // Check role and navigate accordingly
       if (role === 'learner') {
-        navigate(`/learners/tutors`, { state: { role, skills, location, photo, id, swipes } });
+        navigate(`/learners/tutors`, { state: { role, skills, location, photo, id, swipes,name,email} });
       } else if (role === 'tutor') {
-        navigate('/tutor-dashboard', { state: { role, skills, location, photo, id } });
+        navigate('/tutor-dashboard', { state: { role, skills, location, photo, id,name,email} });
       }
     } catch (error) {
       // Show error notification

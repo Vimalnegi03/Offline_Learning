@@ -17,6 +17,7 @@ const validationSchema = Yup.object({
   location: Yup.string().required('Location is required'),
   role: Yup.string().oneOf(['learner', 'tutor'], 'Invalid Role').required('Role is required'),
   photo: Yup.mixed().required('Profile photo is required'),
+  description: Yup.string().required('Description is required'),
 });
 
 const Register = () => {
@@ -31,6 +32,7 @@ const Register = () => {
       formData.append('location', values.location);
       formData.append('role', values.role);
       formData.append('photo', values.photo);
+      formData.append('description', values.description);
 
       const response = await axios.post(`${url}/api/users/register`, formData, {
         headers: {
@@ -69,6 +71,7 @@ const Register = () => {
           location: '',
           role: '',
           photo: null,
+          description: '',
         }}
         validationSchema={validationSchema}
         onSubmit={handleSubmit}
@@ -169,6 +172,17 @@ const Register = () => {
               <ErrorMessage name="photo" component="div" className="text-red-500 text-sm" />
             </div>
 
+            <div>
+              <label className="block text-gray-600 mb-2" htmlFor="description">Description</label>
+              <Field
+                as="textarea"
+                name="description"
+                placeholder="Describe yourself (e.g., your goals if learner or experience if tutor)"
+                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-400"
+              />
+              <ErrorMessage name="description" component="div" className="text-red-500 text-sm" />
+            </div>
+
             <button
               type="submit"
               className="w-full py-3 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none"
@@ -179,7 +193,9 @@ const Register = () => {
           </Form>
         )}
       </Formik>
-
+      <div className="text-center">
+          <p className="text-sm">Alreaady have an account? <a href="/login" className="text-blue-500">Login</a></p>
+        </div>
       <ToastContainer />
     </motion.div>
   );

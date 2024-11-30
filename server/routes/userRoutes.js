@@ -1,5 +1,5 @@
 import express from 'express';
-import { registerUser, loginUser, getAllUsers ,tutorConnect,getSwipedLearners,learnerConnect,mutualSwipes} from '../controllers/userController.js';
+import { registerUser, loginUser, getAllUsers ,tutorConnect,getSwipedLearners,learnerConnect,mutualSwipes,getUser,updateProfile} from '../controllers/userController.js';
 import {upload} from "../middleware/upload.js";
 import User from '../models/userModel.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
@@ -67,4 +67,6 @@ router.post('/connect', tutorConnect);
 router.post('/connect_learner',learnerConnect)
 router.get('/swipes/:tutorId', getSwipedLearners);
 router.get('/check-mutual-swipe/:learnerId/:tutorId',mutualSwipes)
+router.get('/:id',getUser);
+router.put('/update-profile/:userId',updateProfile)
 export default router;

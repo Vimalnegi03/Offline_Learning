@@ -40,6 +40,10 @@ const userSchema = new mongoose.Schema({
       required: true,
     },
   },
+  description:{
+    type:String,
+    required:true
+  },
   swipes: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User' // Reference to User model

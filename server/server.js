@@ -6,6 +6,7 @@ import userRoutes from './routes/userRoutes.js';
 import chatRoutes from './routes/chatRoutes.js'; // Assuming you'll add routes for chat history
 import cors from 'cors';
 import Chat from './models/chat.js'; // Import the Chat model for saving messages
+import emailRoutes from "./routes/emailRoutes.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -45,6 +46,7 @@ io.on('connection', (socket) => {
   });
   app.use('/api/users', userRoutes); // Existing user routes
   app.use('/api/chats', chatRoutes);  // Chat routes for chat history
+  app.use("/api/email", emailRoutes);
 
   socket.on('disconnect', () => {
     console.log('User disconnected');
