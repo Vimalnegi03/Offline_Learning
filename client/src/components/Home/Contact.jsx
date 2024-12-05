@@ -19,7 +19,7 @@ const EmailForm = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post('http://localhost:5000/api/email/send', formData);
+      const response = await axios.post('https://offline-learning.onrender.com/api/email/send', formData);
       setStatus({ success: true, message: response.data.success });
       setFormData({
         name: '',
