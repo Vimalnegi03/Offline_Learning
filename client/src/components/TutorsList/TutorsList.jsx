@@ -10,24 +10,24 @@ const TutorsList = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [photo, setPhoto] = useState(location.state.photo);
-  const [name, setNaam] = useState(location.state.name);
+  const [photo] = useState(location.state.photo);
+  const [name] = useState(location.state.name);
   const [email] = useState(location.state.email);
   const {
     skills: userSkills = [],
     location: userLocation = { coordinates: [0, 0] },
     id: userId = '',
-    swipes: userSwipes = []
+    swipes: userSwipes = [],
   } = location.state || {};
 
   const [filteredTutors, setFilteredTutors] = useState([]);
   const [connectedTutors, setConnectedTutors] = useState([]);
-
+  const [unreadCounts, setUnreadCounts] = useState({});
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
 
   const handleLogout = () => {
-    toast.info('Logged out successfully!');
     navigate('/login');
+    toast.info('Logged out successfully!');
   };
 
   const handleUpdateProfile = () => {
@@ -48,16 +48,12 @@ const TutorsList = () => {
 
   const handleConnect = async (tutorId) => {
     try {
-      const tutorID = tutorId;
-      const learnerId = userId;
-
       await axios.post(`${url}/api/users/connect`, {
-        learnerId,
-        tutorID,
+        learnerId: userId,
+        tutorID: tutorId,
       });
-
       toast.success('Connection request sent!');
-      setConnectedTutors((prev) => [...prev, tutorID]);
+      setConnectedTutors((prev) => [...prev, tutorId]);
     } catch (error) {
       console.error('Error connecting with tutor:', error.message);
       toast.error('Error connecting. Please try again.');
@@ -80,7 +76,7 @@ const TutorsList = () => {
   };
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchTutors = async () => {
       try {
         const response = await axios.get(`${url}/api/users/users`);
         const allUsers = response?.data || [];
@@ -114,15 +110,32 @@ const TutorsList = () => {
           })
         );
 
-        setFilteredTutors(matchingTutors.filter((tutor) => tutor !== null));
+        const validTutors = matchingTutors.filter((tutor) => tutor !== null);
+        setFilteredTutors(validTutors);
+
+        const unreadCountsMap = {};
+        await Promise.all(
+          validTutors.map(async (tutor) => {
+            try {
+              const unreadResponse = await axios.get(
+                `${url}/api/chats/unread/${userId}/${tutor._id}`
+              );
+              unreadCountsMap[tutor._id] = unreadResponse.data.unreadCount || 0;
+            } catch (err) {
+              console.error(`Error fetching unread count for tutor ${tutor._id}:`, err);
+              unreadCountsMap[tutor._id] = 0;
+            }
+          })
+        );
+        setUnreadCounts(unreadCountsMap);
       } catch (error) {
         console.error('Error fetching tutors:', error);
         toast.error('Error fetching tutors');
       }
     };
 
-    fetchUsers();
-  }, [userSkills, userLocation]);
+    fetchTutors();
+  }, [userSkills, userLocation, userId,setUnreadCounts]);
 
   return (
     <div className="container mx-auto p-6 bg-gray-100 min-h-screen relative">
@@ -144,13 +157,13 @@ const TutorsList = () => {
             <hr />
             <button
               onClick={handleUpdateProfile}
-              className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-800 transition-colors"
+              className="w-full text-left px-4 py-2 hover:bg-green-300 text-gray-800 transition-colors"
             >
               Update Profile
             </button>
             <button
               onClick={handleLogout}
-              className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-800 transition-colors"
+              className="w-full text-left px-4 py-2 hover:bg-red-400 text-gray-800 transition-colors"
             >
               Log Out
             </button>
@@ -192,6 +205,11 @@ const TutorsList = () => {
               >
                 {getButtonLabel(tutor)}
               </button>
+              {unreadCounts[tutor._id] > 0 && (
+                <span className="text-sm bg-blue-500 text-white rounded-full px-2 py-1">
+                  {unreadCounts[tutor._id]} <span className=''>unread</span>
+                </span>
+              )}
             </li>
           ))}
         </ul>

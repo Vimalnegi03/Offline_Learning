@@ -3,36 +3,60 @@ import axios from 'axios';
 import { url } from '../../url';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; // Import CSS for Toastify
+import 'react-toastify/dist/ReactToastify.css';
 
 const SwipedLearnersList = ({ tutorId }) => {
   const location = useLocation();
-  const navigate = useNavigate(); // Use navigate to redirect
+  const navigate = useNavigate();
   const [learners, setLearners] = useState([]);
+  const [unreadCounts, setUnreadCounts] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { id: userId, email } = location.state || {};
-  const [photo, setPhoto] = useState(location.state.photo);
-  const [name, setNaam] = useState(location.state.name);
-  const [menuOpen, setMenuOpen] = useState(false); // State to toggle dropdown menu
-
+  const [photo, setPhoto] = useState(location.state?.photo);
+  const [name, setNaam] = useState(location.state?.name);
+  const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
     const fetchSwipedLearners = async () => {
       try {
-        console.log('Fetching swiped learners for tutor: ' + userId);
+        console.log(`Fetching swiped learners for tutor: ${userId}`);
 
         // Fetch learners who swiped on the tutor
         const response = await axios.get(`${url}/api/users/swipes/${userId}`);
 
         if (response.data.learners && Array.isArray(response.data.learners)) {
           setLearners(response.data.learners);
+
+          // Fetch unread message counts for each learner in parallel
+          const counts = await Promise.all(
+            response.data.learners.map(async (learner) => {
+              try {
+                const unreadResponse = await axios.get(
+                  `${url}/api/chats/unread/${userId}/${learner._id}`
+                );
+                console.log(unreadResponse.data);
+                
+                return { learnerId: learner._id, unreadCount: unreadResponse.data.unreadCount || 0 };
+              } catch (err) {
+                console.error(`Error fetching unread count for learner ${learner._id}:`, err);
+                return { learnerId: learner._id, unreadCount: 0 };
+              }
+            })
+          );
+
+          // Transform counts array into a mapping object
+          const countsMap = counts.reduce((acc, { learnerId, unreadCount }) => {
+            acc[learnerId] = unreadCount;
+            return acc;
+          }, {});
+          setUnreadCounts(countsMap);
         } else {
           setLearners([]);
         }
       } catch (error) {
         console.error('Error fetching swiped learners:', error);
         setError('Failed to fetch swiped learners.');
-        toast.error('Failed to fetch swiped learners.'); // Show error toast
+        toast.error('Failed to fetch swiped learners.');
       } finally {
         setLoading(false);
       }
@@ -43,11 +67,11 @@ const SwipedLearnersList = ({ tutorId }) => {
     } else {
       setLoading(false);
       setError('Tutor ID not found. Please log in again.');
-      toast.error('Tutor ID not found. Please log in again.'); // Error toast
+      toast.error('Tutor ID not found. Please log in again.');
     }
-  }, [tutorId, userId,setLearners]);
+  }, [tutorId, userId,setLearners,setUnreadCounts]);
 
-  // Function to handle 'Connect' button click
+  // Handle 'Chat' button click
   const handleConnect = async (learnerId) => {
     try {
       await axios.post(`${url}/api/users/connect_learner`, { userId, learnerId });
@@ -66,19 +90,18 @@ const SwipedLearnersList = ({ tutorId }) => {
       toast.error('Failed to connect with the learner.'); // Error toast
     }
   };
-
-  // Function to handle 'Chat' button click
   const handleChat = (learnerId) => {
+    console.log(`Navigating to chat for tutor: ${userId}, learner: ${learnerId}`);
     let tutorId = userId;
     let temp = learnerId;
     learnerId = tutorId;
     tutorId = temp;
     console.log('Sender ID: ' + learnerId);
-    navigate('/chat', { state: { tutorId, learnerId, name, photo } }); // Navigate to chat with IDs
-    toast.info('Redirecting to chat...'); // Info toast
+    navigate('/chat', { state: { tutorId, learnerId, name, photo } });
+    toast.info('Redirecting to chat...');
   };
 
-  // Handle logout
+  // Render logic
   const handleLogout = () => {
     toast.success('Logged out successfully!');
     navigate('/login'); // Redirect to login page
@@ -87,7 +110,6 @@ const SwipedLearnersList = ({ tutorId }) => {
     navigate('/update-profile', { state: { userId } }); // Navigate to update profile page
   };
 
-  // Render logic based on loading, error, and learners state
   if (loading) {
     return <p className="text-gray-500">Loading...</p>;
   }
@@ -102,10 +124,9 @@ const SwipedLearnersList = ({ tutorId }) => {
 
   return (
     <div className="container mx-auto px-4 py-8 relative">
-      <ToastContainer /> {/* Toast container for notifications */}
-
-      {/* Top-right profile icon */}
-      <div className="absolute top-4 right-4">
+      <ToastContainer />
+       {/* Top-right profile icon */}
+       <div className="absolute top-4 right-4">
         <button
           className="bg-blue-500 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold"
           onClick={() => setMenuOpen((prev) => !prev)}
@@ -119,12 +140,12 @@ const SwipedLearnersList = ({ tutorId }) => {
             <p className="p-4 text-gray-700 text-sm border-b">{name}</p>
             <button
         onClick={handleUpdateProfile}
-        className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-800 transition-colors"
+        className="w-full text-left px-4 py-2 hover:bg-green-300 text-gray-800 transition-colors"
       >
         Update Profile
       </button>
             <button
-              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-400"
               onClick={handleLogout}
             >
               Log Out
@@ -149,18 +170,22 @@ const SwipedLearnersList = ({ tutorId }) => {
             <p className="text-gray-700 mb-2">Skills: {learner.skills.join(', ')}</p>
             <p className="text-gray-600 mb-4">Description: {learner?.description}</p>
 
-            {/* Connect or Chat button */}
             {learner.swipes.includes(userId) ? (
               <button
-                className="bg-green-500 text-white px-6 py-3 rounded-full hover:bg-green-600 transition duration-200"
-                onClick={() => handleChat(learner._id)} // Chat functionality
+                className="bg-green-500 text-white px-6 py-3 rounded-full hover:bg-green-600 transition duration-200 relative"
+                onClick={() => handleChat(learner._id)}
               >
                 Chat
+                {unreadCounts[learner._id] > 0 && (
+                  <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {unreadCounts[learner._id]}
+                  </span>
+                )}
               </button>
             ) : (
               <button
                 className="bg-blue-500 text-white px-6 py-3 rounded-full hover:bg-blue-600 transition duration-200"
-                onClick={() => handleConnect(learner._id)}
+                onClick={()=> handleConnect(learner._id)}
               >
                 Connect
               </button>
