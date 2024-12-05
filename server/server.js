@@ -14,7 +14,7 @@ const httpServer = createServer(app);
 // Set up Socket.io with CORS
 const io = new Server(httpServer, {
   cors: {
-    origin: 'http://localhost:5173', // Allow requests from this origin
+    origin: 'https://tution.onrender.com', // Allow requests from this origin
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify the methods you want to allow
     credentials: true, // Enable credentials if needed
   },
@@ -23,7 +23,7 @@ const io = new Server(httpServer, {
 // Middleware
 app.use(express.json());
 app.use(cors({
-  origin: 'http://localhost:5173', // Allow requests from this origin
+  origin: 'https://tution.onrender.com', // Allow requests from this origin
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 }));
